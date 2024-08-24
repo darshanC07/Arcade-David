@@ -73,7 +73,30 @@ def gemini_ai(prompt):
     response = chat.send_message(prompt)
 
     return (response.text)
+    
+def conversation_appender(prompt, response = ""):
+    conversation.append({"role" : "user" , "content" : prompt})
+    conversation.append({"role" : "david","content" : response})
 
+def classifier(command):
+    prompt = f"classify the following statement in category of 'Command' or 'question' or 'normal' and return just that one word : {command}"
+    result = gemini_ai(prompt)
+    # print(result)
+    return result.lower()
+
+def new_classifier(command):
+    prompt = f"go through {basic_category} and based on it classify the following statement in category of 'other' or 'normal' and return just that one word : {command}"
+    result = gemini_ai(prompt)
+    # print(result)
+    return result.lower()
+
+def cleaner(code_response):
+
+    '''removes python word and other symbols from code response'''
+
+    code_response1 = code_response.replace("python","")
+    final_code_response = code_response1.replace("```","")
+    return final_code_response
 def summarizer(history):
     summary = gemini_ai(f"summarize the following text : {history}")
     return summary
@@ -98,7 +121,59 @@ def takeCommand():
         except Exception as e:
             print(e)
             say("Some error occurred by Jarvis A I")
+            
+basic_category = {
+    "other" : ["open text file", "open specific app/file" ,"create a new text file with name", "find specific folder", "give path of specific     file"] , 
+    "normal" : ["remember something" , "recall it"]}
 
 if __name__ == "__main__":
     say("Hello I am Jarvis A I")
     sites = [["Youtube","https://www.youtube.com"],["wikipedia","https://www.wikipedia.org"],["google","https://google.com"]]
+    while True:
+        print("listening..")
+        command = takeCommand()
+        # print(f"Query : {command}")
+        try:
+            for site in sites:
+                if f"open {site[0]}".lower() in command.lower():
+                    say(f"opening {site[0]} Sir")
+                    print(f"opening {site[0]} Sir")
+                    webbrowser.open(site[1])
+
+            if "quit" in command.lower():
+                break
+
+            elif "open music" in command.lower():
+                musicPath = "C:/Users/acer/Downloads/sample_music.mp3"
+                # playsound(musicPath) #alternate way
+                os.system(f"start {musicPath}")
+
+            elif "time" in command.lower():
+                hour = datetime.datetime.now().strftime("%H")
+                mins = datetime.datetime.now().strftime("%M")
+                say(f"Current time is {hour} hours {mins} minutes")
+
+            elif "search".lower() in command.lower():
+                base_url = "https://www.google.com/search?q="
+                search_item = command.split("search",1)[1] # splits the command once after word "search" and returns words after search
+                final_search_item = str('+'.join(search_item.split())) #separates words in search_item with +
+                final_url = base_url+final_search_item
+                webbrowser.open_new(final_url)
+
+            elif "artificial".lower() in command.lower():
+                prompt = command.split("intelligence",1)[1]
+                response = gemini_ai(prompt)
+                print(response)
+
+            elif "conversation history".lower() in command.lower():
+                    chat_history = chat(command)
+
+            else:
+                chat_response = chat(command)
+                print(f"Role : Jarvis\nContent : {chat_response}")
+                say(chat_response)
+
+
+        except Exception as e:
+            # print(e)
+            pass
